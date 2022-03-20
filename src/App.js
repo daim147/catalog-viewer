@@ -1,11 +1,11 @@
-import React, { Fragment, useState } from 'react';
+import React, { Fragment, useState, useEffect } from 'react';
 import 'h8k-components';
 
 import { image1, image2, image3, image4 } from './assets/images';
 import { Thumbs, Viewer } from './components';
 
 const title = 'Catalog Viewer';
-
+let timer;
 function App() {
   const catalogsList = [
     {
@@ -28,33 +28,51 @@ function App() {
 
   const [catalogs] = useState([...catalogsList]);
   let [activeIndex, setActiveIndex] = useState(0);
-  const [slideTimer, setSlideTimer] = useState(null);
-  const [slideDuration] = useState(3000);
+  const [slideDuration] = useState(2000);
   const [slide, setSlide] = useState();
-  let timer;
   const goNext = () => {
-    console.log(activeIndex, 'fnc', catalogs.length);
+    clearTimer();
     if (activeIndex >= catalogs.length - 1) {
-      setActiveIndex(() => 0);
+      activeIndex = 0;
+      setActiveIndex(activeIndex);
+      setTimer();
       return;
     }
     setActiveIndex(++activeIndex);
+    setTimer();
   };
-  const goBack = (e) => {
+  const goBack = () => {
+    clearTimer();
     if (activeIndex <= 0) {
-      setActiveIndex(catalogs.length - 1);
+      activeIndex = catalogs.length - 1;
+      setActiveIndex(activeIndex);
       return;
     }
     setActiveIndex(--activeIndex);
+    setTimer();
   };
-  const toggleTimer = ({ target: { checked } }) => {
-    if (checked) {
-      timer = setInterval(() => {
-        goNext();
-      }, slideDuration);
+  const setIndex = (index) => {
+    clearTimer();
+    activeIndex = index;
+    setActiveIndex(activeIndex);
+    setTimer();
+  };
+  const setTimer = () => {
+    timer = setInterval(() => {
+      goNext();
+    }, slideDuration);
+  };
+  const clearTimer = () => {
+    clearInterval(timer);
+    timer = undefined;
+  };
+  useEffect(() => {
+    if (slide) {
+      setTimer();
+    } else {
+      clearTimer();
     }
-  };
-  console.log(activeIndex, 'active re');
+  }, [slide]);
   return (
     <Fragment>
       <h8k-navbar header={title}></h8k-navbar>
@@ -73,7 +91,7 @@ function App() {
               <Thumbs
                 items={catalogs}
                 currentIndex={activeIndex}
-                setIndex={setActiveIndex}
+                setIndex={setIndex}
               />
               <button
                 className='icon-only outlined'
@@ -89,7 +107,7 @@ function App() {
           <input
             type='checkbox'
             data-testid='toggle-slide-show-button'
-            onChange={toggleTimer}
+            onChange={(e) => setSlide(e.target.checked)}
           />
           <label className='ml-6'>Start Slide Show</label>
         </div>
